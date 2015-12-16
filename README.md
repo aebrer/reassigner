@@ -1,7 +1,15 @@
 # reassigner
 This software reads pdb files (or downloads them from the web) and assigns secondary structure. These assignments are based on the synthesis of two different models: a virtual geometry model and a phi/psi2 motif model. This software can identify many aspects of secondary structure, including beta-bulges. Human readable or machine readable output is available.
 
+At its core, there are two methods for structure identification, a virtual geometry-based method first described by King and Johnson (1) with some modifications made, and an application of (φ/ψ) 2 motifs (a metric defined by Hollingsworth et al. in 2012) (2) to determine secondary structure. The software is able to intelligently combine these two interpretations of structure in order to identify a very wide range of secondary structures, including β-bulges and non-hydrogen bonded conformations.
 
+# References:
+	
+1: S. M. King, W. C. Johnson, Assigning secondary structure from protein coordinate data. Proteins Struct. Funct. Bioinforma. 35, 313–320 (1999).
+	
+2: S. A. Hollingsworth, M. C. Lewis, D. S. Berkholz, W.-K. Wong, P. A. Karplus, (φ,ψ)2 Motifs: A Purely Conformation-Based Fine-Grained Enumeration of Protein Parts at the Two-Residue Level. J. Mol. Biol. 416, 78–93 (2012).
+
+# Help:
 
 	usage: reassigner.v14.py [-h] [-i FILE] [-c CODE] [-o FILE] [--legend] [--verbose]
 	
@@ -24,8 +32,7 @@ This software reads pdb files (or downloads them from the web) and assigns secon
 	output if there are any ligands or other non-water HETATOMS present. This can
 	be safely ignored.
  
- 
-	Legend:
+# Legend:
 	
 	_:	Break in the chain (as detected by checking bond distance)
 	-:	Unassigned trans-residue
