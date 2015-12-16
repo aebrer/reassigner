@@ -10,12 +10,15 @@ This software reads pdb files (or downloads them from the web) and assigns secon
 	secondary structure.
 	
 	optional arguments:
-		-h, --help  show this help message and exit
-		-i FILE     This should be a pdb file. Do not use in combination with the "-c" option.
-		-c CODE     This should be a four letter pdb code. Only use this option if you want to download directly from the PDB.
-		-o FILE     Output file, a table using tabs as seperators. If not specified, default is to output to STDOUT as human readable output.
-		--legend    Option to print a legend for the Secondary Structure codes.
-		--verbose   Option to print a all the output, including the behind the scenes methods for structure assignment.
+		-h, --help	show this help message and exit
+		-i FILE	This should be a pdb file. Do not use in combination with the "-c" option.
+		-c CODE	This should be a four letter pdb code. Only use this option if you want to download 
+				directly from the PDB.
+		-o FILE	Output file, a table using tabs as seperators. If not specified, default is to output
+				to STDOUT as human readable output.
+		--legend	Option to print a legend for the Secondary Structure codes.
+		--verbose	Option to print a all the output, including the behind the scenes methods 
+				for structure assignment.
 	
 	IMPORTANT NOTES: Expect there to be strange ? residues at the end of the
 	output if there are any ligands or other non-water HETATOMS present. This can
