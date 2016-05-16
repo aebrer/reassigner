@@ -9,10 +9,12 @@ import sys
 import shutil
 import glob
 import re
+import warnings
+
 
 #silence warnings from numpy when doing gap_checks (and all others but it's all dealt with internally [hopefully])
 old_settings = np.seterr(all='ignore') 
-
+warnings.simplefilter(action = "ignore", category = FutureWarning)
 
 # Oregon State 2014
 
