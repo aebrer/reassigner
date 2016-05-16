@@ -3,7 +3,8 @@ This software reads pdb files (or downloads them from the web) and assigns secon
 
 At its core, there are two methods for structure identification, a virtual geometry-based method first described by King and Johnson (1) with some modifications made, and an application of (φ/ψ) 2 motifs (a metric defined by Hollingsworth et al. in 2012) (2) to determine secondary structure. The software is able to intelligently combine these two interpretations of structure in order to identify a very wide range of secondary structures, including β-bulges and non-hydrogen bonded conformations.
 
-1osh320-340example.png
+![Example of Reassigner vs DSSP]
+(1osh320-340example.png)
 
 
 
