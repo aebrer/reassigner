@@ -47,7 +47,7 @@ parser.add_argument('--verbose',dest='verbose', action='store_true', help='Optio
 parser.set_defaults(legend=False, verbose=False)
 args=parser.parse_args()
 if args.legend == True:
-    print ("\nLEGEND:\n_:\tBreak in the chain (as detected by checking bond distance)\n-:\tUnassigned trans-residue\n=:\tUnassigned cis-residue\nP:\tPII-Helix\nt:\tTurn defined by CA to CA Distance\nN:\tNon-Hydrogen Bonded Turn (Similar to 's')\nT:\tHydrogen Bonded Turn T\nE:\tExtended or Beta-strand conformation\nH:\tAlpha Helical Conformation\nG:\t3,10 Helix\nBb:\tBeta-bulge\nU:\tPi-helical bulge\nX:\tThe Stig\n")
+    print ("\nLEGEND:\n_:\tBreak in the chain (as detected by checking bond distance)\n-:\tUnassigned trans-residue\n=:\tUnassigned cis-residue\nP:\tPII-Helix\nt:\tTurn defined by CA to CA Distance (or implied as a consequence of other turns)\nN:\tA typically non-hydrogen bonded turn\nT:\tA typically hydrogen bonded turn T\nE:\tExtended or Beta-strand conformation\nH:\tAlpha Helical Conformation\nG:\t3,10 Helix\nBb:\tBeta-bulge\nU:\tPi-helical bulge\nX:\tThe Stig\n")
 # Dictionary and function that converts triple letter codes to single letter
 # Any non-conventional three letter code becomes "?"
 # Victor made the first version of this function
