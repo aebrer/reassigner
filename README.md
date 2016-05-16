@@ -6,6 +6,12 @@ At its core, there are two methods for structure identification, a virtual geome
 ![Example of Reassigner vs DSSP]
 (1osh320-340example.png)
 
+	DSSP:		HHHHHHHHHH	HHHHHHHHHI	IIIIS HHHH
+	Reassigner:	HHHHHHtTHH	HHHHHHHHHH	Httt-THHNH	
+	Residue Type	QIALLKGSAV	EAMFLRSAEI	FNKKLPSGHS	
+	Residue Number	320		330		340 
+
+
 Shown here is an example of the Reassigner vs the more commonly used program DSSP. The protein in the figure is PDB code 1OSH, and the residues are 320-340. It's clear from the example that the DSSP assignments (red text) misidentify the mid-helix turn as more helix residues, whereas the Reassigner assignments (blue text) correctly identify it. Furthermore, residues 339 and 340 are labeled as "I" (a pi-helix) by DSSP, while it is clear from visual inspection that this is still an ordinary alpha-helix residue, as identified by the Reassigner.
 
 
