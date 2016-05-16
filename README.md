@@ -6,9 +6,9 @@ At its core, there are two methods for structure identification, a virtual geome
 ![Example of Reassigner vs DSSP]
 (1osh320-340example.png)
 
-	DSSP:           HHHHHHHHHH   HHHHHHHHHI   IIIIS HHHH
-	Reassigner:     HHHHHHtTHH   HHHHHHHHHH   Httt-THHNH	
-	Residue Type    QIALLKGSAV   EAMFLRSAEI   FNKKLPSGHS	
+	DSSP:           HHHHHHHHHH   HHHHHHHHHI   I
+	Reassigner:     HHHHHHtTHH   HHHHHHHHHH   H	
+	Residue Type    QIALLKGSAV   EAMFLRSAEI   F	
 	Residue Number  320          330          340 
 
 
