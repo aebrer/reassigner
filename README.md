@@ -51,9 +51,9 @@ Shown here is an example of the Reassigner vs the more commonly used program DSS
 	-:	Unassigned trans-residue
 	=:	Unassigned cis-residue
 	P:	PII-Helix
-	t:	Turn defined by CA to CA Distance
-	N:	Non-Hydrogen Bonded Turn (Similar to 's')
-	T:	Hydrogen Bonded Turn T
+	t:	Turn defined by CA to CA Distance (or implied by another turn residue)
+	N:	A Typically Non-Hydrogen Bonded Turn
+	T:	A Typically Hydrogen Bonded Turn T
 	E:	Extended or Beta-strand conformation
 	H:	Alpha Helical Conformation
 	G:	3,10 Helix
