@@ -10,6 +10,11 @@ import shutil
 import glob
 import re
 import warnings
+import time
+
+
+
+startTime = time.time()
 
 
 #silence warnings from numpy when doing gap_checks (and all others but it's all dealt with internally [hopefully])
@@ -84,7 +89,16 @@ else:
 
 
 
-
+def atom_get(i,atom):
+    if atom_list[i][1] == atom:
+        return (atom_list[i][2])
+    else:
+        return ('no')
+def chain_get(i,atom):
+    if atom_list[i][1] == atom:
+        return (atom_list[i][3])
+    else:
+        return ('no') 
 
 # function to get indicies, matches the index from resnum list with the index for the atomic coords,  which is why the resnum has to be in each
 def index_getter(resnum):
@@ -1240,9 +1254,7 @@ def cis_calc(count):
 
 
 # These three lists contain everything needed from PDB file for all calculations
-# don't touch them
-# maybe this doesn't make sense anymore?
-# they are WAY required though, so don't touch them
+# declared here for correct scope, but cleared below to reduce overhead
 
 atom_list = []
 atom_xyz = []
@@ -1256,14 +1268,19 @@ model = struc[0]
 ########## CAUTION CAUTION CATUION ########
 # There is a loop below, "for chain in model:"
 # all the code needs to be in that loop. This
-# is the crazy solution we came up with that 
+# is the crazy (stupid) solution we came up with that 
 # allows the program to work on each chain.
-# Judge not lest ye be judged.
 
 
 # Reads in the atom coordinates to make these lists
 for chain in model:
     #### EVERYTHING MUST BE WITHIN THIS CHAIN LOOP
+    
+    # clear these here to reduce overhead
+    atom_list = []
+    atom_xyz = []
+    resnum_list_unsort = []
+    
     for residue in chain:
         for atom in residue:
             if atom.get_name() == 'CA' or atom.get_name() == 'C' or atom.get_name() == 'N' or atom.get_name() == 'O' and residue.get_resname() != 'HOH':
@@ -1314,66 +1331,7 @@ for chain in model:
     phi_dict = {}
     psi_dict = {}
     ome_dict = {}
-
-    for resnum in resnum_list:
-        
-        #using try means that we will not be thrown off by gaps
-        try:
-            phi_dict[resnum] = phi_calc(resnum)
-        except:
-            pass            #print "Phi not calculated for residue number %i\n" % resnum
-        
-        try:
-            psi_dict[resnum] = psi_calc(resnum)
-        except:
-            pass            #print "psi not calculated for residue number %i\n" % resnum
-
-        try:
-            zeta_dict[resnum] = zeta_calc(resnum)
-        except:
-            pass            #print "Zeta not calculated for residue number %i\n" % resnum
-        try:
-            tau_dict[resnum] = tau_calc(resnum)
-        except:
-            pass            #print "Tau not calculated for residue number %i\n" % resnum
-        
-        try:
-            dison3_dict[resnum] = dison3_calc(resnum)
-        except:
-            pass            #print "Dison3 not calculated for residue number %i\n" % resnum
-        
-        try:
-            dison4_dict[resnum] = dison4_calc(resnum)
-        except:
-            pass            #print "Dison4 not calculated for residue number %i\n" % resnum
-        
-        try:
-            discn3_dict[resnum] = discn3_calc(resnum)
-        except:
-            pass            #print "Discn3 not calculated for residue number %i\n" % resnum
-        
-        try:
-            disnn1_dict[resnum] = disnn1_calc(resnum)
-        except:
-            pass
-
-                
-        try:
-            discaca3_dict[resnum] = discaca3_calc(resnum)
-        except:
-            pass
-        
-        try:
-            ome_dict[resnum] = ome_calc(resnum)
-        except:
-            pass
-           
-
-    ###############################################################################################
-    ######### Above this line is all the looping and such that calls the calulators ###############
-    ################## Below is the acutal assignment #############################################
-    ###############################################################################################
-
+    
     ## dictionary that contains all secondary structure assignments
     ss_dict = {}
     pp_dict = {}
@@ -1383,43 +1341,89 @@ for chain in model:
     res_type_dict = {}
     chain_id_dict = {}
     aa_dict = {}
+    
+    for count in resnum_count:
+        
+        #using try means that we will not be thrown off by gaps
+        try:
+            phi_dict[resnum_count_dict[count]] = phi_calc(resnum_count_dict[count])
+        except:
+            pass            #print "Phi not calculated for residue number %i\n" % resnum_count_dict[count]
+        
+        try:
+            psi_dict[resnum_count_dict[count]] = psi_calc(resnum_count_dict[count])
+        except:
+            pass            #print "psi not calculated for residue number %i\n" % resnum_count_dict[count]
 
-    def atom_get(i,atom):
-        if atom_list[i][1] == atom:
-            return (atom_list[i][2])
-        else:
-            return ('no')
-    def chain_get(i,atom):
-        if atom_list[i][1] == atom:
-            return (atom_list[i][3])
-        else:
-            return ('no') 
+        try:
+            zeta_dict[resnum_count_dict[count]] = zeta_calc(resnum_count_dict[count])
+        except:
+            pass            #print "Zeta not calculated for residue number %i\n" % resnum_count_dict[count]
+        try:
+            tau_dict[resnum_count_dict[count]] = tau_calc(resnum_count_dict[count])
+        except:
+            pass            #print "Tau not calculated for residue number %i\n" % resnum_count_dict[count]
+        
+        try:
+            dison3_dict[resnum_count_dict[count]] = dison3_calc(resnum_count_dict[count])
+        except:
+            pass            #print "Dison3 not calculated for residue number %i\n" % resnum_count_dict[count]
+        
+        try:
+            dison4_dict[resnum_count_dict[count]] = dison4_calc(resnum_count_dict[count])
+        except:
+            pass            #print "Dison4 not calculated for residue number %i\n" % resnum_count_dict[count]
+        
+        try:
+            discn3_dict[resnum_count_dict[count]] = discn3_calc(resnum_count_dict[count])
+        except:
+            pass            #print "Discn3 not calculated for residue number %i\n" % resnum_count_dict[count]
+        
+        try:
+            disnn1_dict[resnum_count_dict[count]] = disnn1_calc(resnum_count_dict[count])
+        except:
+            pass
 
-    for resnum in resnum_list:
-        indices = index_getter(resnum)    
+                
+        try:
+            discaca3_dict[resnum_count_dict[count]] = discaca3_calc(resnum_count_dict[count])
+        except:
+            pass
+        
+        try:
+            ome_dict[resnum_count_dict[count]] = ome_calc(resnum_count_dict[count])
+        except:
+            pass
+
+
+        indices = index_getter(resnum_count_dict[count])    
         atom_types = 'CA'
         
         for i in indices:
             if atom_getter(i,'CA') == 'no':
                 pass
             else:
-                res_type_dict[resnum] = atom_get(i,'CA')
-                chain_id_dict[resnum] = chain_get(i,'CA')
+                res_type_dict[resnum_count_dict[count]] = atom_get(i,'CA')
+                chain_id_dict[resnum_count_dict[count]] = chain_get(i,'CA')
         try:
-            aa_dict[resnum] = to_single(one_letter,res_type_dict[resnum])
+            aa_dict[resnum_count_dict[count]] = to_single(one_letter,res_type_dict[resnum_count_dict[count]])
         except:
-            aa_dict[resnum] = '?'
+            aa_dict[resnum_count_dict[count]] = '?'
+    
+        ### setting all the SS to blank
+        ss_dict[resnum_count_dict[count]] = '-'
+        pp_dict[resnum_count_dict[count]] = '-'           
 
-    ### setting all the SS to blank
-    for resnum in resnum_list:
-        ss_dict[resnum] = '-'
-        pp_dict[resnum] = '-'
-        
+    ###############################################################################################
+    ######### Above this line is all the looping and such that calls the calulators ###############
+    ################## Below is the acutal assignment #############################################
+    ###############################################################################################
+
 
     # assigns SS to all residues
     # ensures that there is a minimum of 4 residues in a row for a helix
     #PRIORITY: B, P(4+), H, G, T, E, N, P(2-3)
-    for count in resnum_count:
+    #for count in resnum_count:
         try:
             if helix1_short_calc(count) == 1:
                 ss_dict[resnum_count_dict[count]] = 'P'
@@ -1746,45 +1750,45 @@ for chain in model:
 
 
     # logic for assigning the final secondary structures
-    for resnum in resnum_list:
+    #for resnum in resnum_list:
         try:
-            final_dict[resnum] = pp_dict[resnum]
+            final_dict[resnum_count_dict[count]] = pp_dict[resnum_count_dict[count]]
         except:
             pass
         try:
-            if(final_dict[resnum] == '-'):
-                final_dict[resnum] = ss_dict[resnum]
+            if(final_dict[resnum_count_dict[count]] == '-'):
+                final_dict[resnum_count_dict[count]] = ss_dict[resnum_count_dict[count]]
         except:
             pass
         try:
-            if((final_dict[resnum] == 't') and (ss_dict[resnum] != 'h')and (ss_dict[resnum] != 'E')and (ss_dict[resnum] != 'e')and (ss_dict[resnum] != '-')):
-                final_dict[resnum] = ss_dict[resnum]
+            if((final_dict[resnum_count_dict[count]] == 't') and (ss_dict[resnum_count_dict[count]] != 'h')and (ss_dict[resnum_count_dict[count]] != 'E')and (ss_dict[resnum_count_dict[count]] != 'e')and (ss_dict[resnum_count_dict[count]] != '-')):
+                final_dict[resnum_count_dict[count]] = ss_dict[resnum_count_dict[count]]
         except:
             pass
         try:
-            if((pp_dict[resnum] == 'E') and ((ss_dict[resnum] == 'T') or (ss_dict[resnum] == 'N'))):
-                final_dict[resnum] = ss_dict[resnum]
+            if((pp_dict[resnum_count_dict[count]] == 'E') and ((ss_dict[resnum_count_dict[count]] == 'T') or (ss_dict[resnum_count_dict[count]] == 'N'))):
+                final_dict[resnum_count_dict[count]] = ss_dict[resnum_count_dict[count]]
         except:
             pass
         try:
-            if(((pp_dict[resnum] == 'E') or (pp_dict[resnum] == 'b'))and ((ss_dict[resnum] == 'B') or (ss_dict[resnum] == 'b'))):
-                final_dict[resnum] = ss_dict[resnum]
+            if(((pp_dict[resnum_count_dict[count]] == 'E') or (pp_dict[resnum_count_dict[count]] == 'b'))and ((ss_dict[resnum_count_dict[count]] == 'B') or (ss_dict[resnum_count_dict[count]] == 'b'))):
+                final_dict[resnum_count_dict[count]] = ss_dict[resnum_count_dict[count]]
         except:
             pass
         try:
-            if(((pp_dict[resnum] == 'H') and ((ss_dict[resnum] == 'G')))):
-                final_dict[resnum] = ss_dict[resnum]
+            if(((pp_dict[resnum_count_dict[count]] == 'H') and ((ss_dict[resnum_count_dict[count]] == 'G')))):
+                final_dict[resnum_count_dict[count]] = ss_dict[resnum_count_dict[count]]
         except:
             pass
         try:
-            if( (ss_dict[resnum] == 'P') and (pp_dict[resnum] != 'T') and (pp_dict[resnum] != 'N')):
-                final_dict[resnum] = ss_dict[resnum]
+            if( (ss_dict[resnum_count_dict[count]] == 'P') and (pp_dict[resnum_count_dict[count]] != 'T') and (pp_dict[resnum_count_dict[count]] != 'N')):
+                final_dict[resnum_count_dict[count]] = ss_dict[resnum_count_dict[count]]
         except:
             pass
 
 
                     ### UNASSIGNED CIS PEPTIDES ASSIGNED HERE
-    for count in resnum_count:
+    #for count in resnum_count:
 
         try:
             if((cis_calc(count) == 1) and final_dict[resnum_count_dict[count]] == '-'):
@@ -1798,7 +1802,7 @@ for chain in model:
     # only prints if there is no output file specified
     if args.output == None:
         
-        # Dmitriy helped out a lot here, though the code has been heavily heavily modified by this point
+        # Dmitriy helped out a lot here, though the code has been heavily modified by this point
         def chunks(l,n):
             for i in range(0,len(l),n):
                 yield l[i:i+n]
@@ -1936,6 +1940,12 @@ for chain in model:
                     pass     
         temp.close()
 
+
+    #endTime = time.time()
+    #workTime = endTime - startTime
+    #print ("\nChain completed in: " + str(workTime) + " seconds.\n")
+
+
 # should be obvious by now, but checking to see if the user asked for output or not
 if args.output == None:
     pass
@@ -1957,3 +1967,8 @@ if args.input == None:
     code = str(args.code)
     pdb = "%s.pdb" % str(code.lower())
     os.remove(pdb)
+    
+    
+endTime = time.time()
+workTime = endTime - startTime
+print ("\nEverything completed in: " + str(workTime) + " seconds.\n")
