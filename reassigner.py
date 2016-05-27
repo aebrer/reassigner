@@ -1261,689 +1261,691 @@ atom_xyz = []
 resnum_list_unsort = []
 pdb_reader = PDBParser(PERMISSIVE = 1, QUIET = True)
 struc = pdb_reader.get_structure("temp", pdb)
-model = struc[0]
+
 
 
 ########## NOTE TO THE READER! ############
 ########## CAUTION CAUTION CATUION ########
-# There is a loop below, "for chain in model:"
-# all the code needs to be in that loop. This
-# is the crazy (stupid) solution we came up with that 
-# allows the program to work on each chain.
+# There is a loop below, "for model in struc"
+# all the code needs to be in that loop.
 
-
-# Reads in the atom coordinates to make these lists
-for chain in model:
+for model in struc:
     #### EVERYTHING MUST BE WITHIN THIS CHAIN LOOP
-    
-    # clear these here to reduce overhead
-    atom_list = []
-    atom_xyz = []
-    resnum_list_unsort = []
-    
-    for residue in chain:
-        for atom in residue:
-            if atom.get_name() == 'CA' or atom.get_name() == 'C' or atom.get_name() == 'N' or atom.get_name() == 'O' and residue.get_resname() != 'HOH':
-                    atom_list.append([str(residue.get_id()[1])+str(residue.get_id()[2]), atom.get_id(), residue.get_resname(), chain.get_id() ])
-                    atom_xyz.append(atom.get_coord())
-                    resnum_list_unsort.append(float(str(residue.get_id()[1])+"."+str(ord(str(residue.get_id()[2])))))    
-
-    pdb.close()
-
-
-
-    #this makes the resnum_list unique, and deals correctly with insertion codes
-    #ie. it gets unique values, sorts them numerically, which works because codes (A, B, C, etc) get converted to ascii values ie. 101A becomes 101.52
-    # then after sorting it undoes this ascii conversion and regenerates the string
-    res_set = set(resnum_list_unsort)
-    resnum_list_float = list(res_set)
-    resnum_list = []
-    for resnum in resnum_list_float:
-        num = re.sub(r"([0-9]+)(\.)([0-9]+)", r"\1", str(resnum))
-        ascii = re.sub(r"([0-9]+)(\.)([0-9]+)", r"\3", str(resnum))
-        if int(ascii) < 0:
-            ascii = int(ascii) * -1
-        insert = chr(int(ascii))
-        resnum_list.append(str(num)+str(insert))
-                
-    # this is necessicary so that we can call the next or previous residue by using count +1 or count -1, but we need to pass the actual resnum in resnum_list to the calculators
-    resnum_count = range(1,len(resnum_list) + 1)
-    count = 1
-    resnum_count_dict = {}
-    for resnum in resnum_list:
-        resnum_count_dict[count] = resnum
-        count = count + 1
-
-    ###############################################################################################
-    ######### Below this line is all the looping and such that calls the calulators then ##########
-    ######### assigns secondary structure. ########################################################
-    ###############################################################################################
-
-    ### loop that makes a dictionary of residue numbers and their zeta values
-
-    zeta_dict = {}
-    tau_dict = {}
-    dison3_dict = {}
-    dison4_dict = {}
-    discn3_dict = {}
-    disnn1_dict = {}
-    discaca3_dict = {}
-    phi_dict = {}
-    psi_dict = {}
-    ome_dict = {}
-    
-    ## dictionary that contains all secondary structure assignments
-    ss_dict = {}
-    pp_dict = {}
-    final_dict = {}
-
-    ##dictionary for residue types based on residue number
-    res_type_dict = {}
-    chain_id_dict = {}
-    aa_dict = {}
-    
-    for count in resnum_count:
+    for chain in model:    
+        # clear these here to reduce overhead
+        atom_list = []
+        atom_xyz = []
+        resnum_list_unsort = []
         
-        #using try means that we will not be thrown off by gaps
-        try:
-            phi_dict[resnum_count_dict[count]] = phi_calc(resnum_count_dict[count])
-        except:
-            pass            #print "Phi not calculated for residue number %i\n" % resnum_count_dict[count]
-        
-        try:
-            psi_dict[resnum_count_dict[count]] = psi_calc(resnum_count_dict[count])
-        except:
-            pass            #print "psi not calculated for residue number %i\n" % resnum_count_dict[count]
+        for residue in chain:
+            for atom in residue:
+                if atom.get_name() == 'CA' or atom.get_name() == 'C' or atom.get_name() == 'N' or atom.get_name() == 'O' and residue.get_resname() != 'HOH':
+                        atom_list.append([str(residue.get_id()[1])+str(residue.get_id()[2]), atom.get_id(), residue.get_resname(), chain.get_id() ])
+                        atom_xyz.append(atom.get_coord())
+                        resnum_list_unsort.append(float(str(residue.get_id()[1])+"."+str(ord(str(residue.get_id()[2])))))    
 
-        try:
-            zeta_dict[resnum_count_dict[count]] = zeta_calc(resnum_count_dict[count])
-        except:
-            pass            #print "Zeta not calculated for residue number %i\n" % resnum_count_dict[count]
-        try:
-            tau_dict[resnum_count_dict[count]] = tau_calc(resnum_count_dict[count])
-        except:
-            pass            #print "Tau not calculated for residue number %i\n" % resnum_count_dict[count]
-        
-        try:
-            dison3_dict[resnum_count_dict[count]] = dison3_calc(resnum_count_dict[count])
-        except:
-            pass            #print "Dison3 not calculated for residue number %i\n" % resnum_count_dict[count]
-        
-        try:
-            dison4_dict[resnum_count_dict[count]] = dison4_calc(resnum_count_dict[count])
-        except:
-            pass            #print "Dison4 not calculated for residue number %i\n" % resnum_count_dict[count]
-        
-        try:
-            discn3_dict[resnum_count_dict[count]] = discn3_calc(resnum_count_dict[count])
-        except:
-            pass            #print "Discn3 not calculated for residue number %i\n" % resnum_count_dict[count]
-        
-        try:
-            disnn1_dict[resnum_count_dict[count]] = disnn1_calc(resnum_count_dict[count])
-        except:
-            pass
-
-                
-        try:
-            discaca3_dict[resnum_count_dict[count]] = discaca3_calc(resnum_count_dict[count])
-        except:
-            pass
-        
-        try:
-            ome_dict[resnum_count_dict[count]] = ome_calc(resnum_count_dict[count])
-        except:
-            pass
-
-
-        indices = index_getter(resnum_count_dict[count])    
-        atom_types = 'CA'
-        
-        for i in indices:
-            if atom_getter(i,'CA') == 'no':
-                pass
-            else:
-                res_type_dict[resnum_count_dict[count]] = atom_get(i,'CA')
-                chain_id_dict[resnum_count_dict[count]] = chain_get(i,'CA')
-        try:
-            aa_dict[resnum_count_dict[count]] = to_single(one_letter,res_type_dict[resnum_count_dict[count]])
-        except:
-            aa_dict[resnum_count_dict[count]] = '?'
-    
-        ### setting all the SS to blank
-        ss_dict[resnum_count_dict[count]] = '-'
-        pp_dict[resnum_count_dict[count]] = '-'           
-
-    ###############################################################################################
-    ######### Above this line is all the looping and such that calls the calulators ###############
-    ################## Below is the acutal assignment #############################################
-    ###############################################################################################
-
-
-    # assigns SS to all residues
-    # ensures that there is a minimum of 4 residues in a row for a helix
-    #PRIORITY: B, P(4+), H, G, T, E, N, P(2-3)
-    #for count in resnum_count:
-        try:
-            if helix1_short_calc(count) == 1:
-                ss_dict[resnum_count_dict[count]] = 'P'
-        except:
-            pass
-
-        try:
-            if betan_test(count) == 1:
-                ss_dict[resnum_count_dict[count]] = 'N'
-        except:
-            pass
-                
-        try:
-            if sheet_calc(count) == 1:
-                ss_dict[resnum_count_dict[count]] = 'E'
-        except:
-            pass
-
-        try:
-            if betat_test(count) == 1:
-                ss_dict[resnum_count_dict[count]] = 'T'
-        except:
-            pass
-            
-            
-        try:
-            if helix10_calc(count) == 1:
-                ss_dict[resnum_count_dict[count]] = 'G'
-        except:
-            pass
-
-        try:
-            if helixa_calc(count) == 1:
-                ss_dict[resnum_count_dict[count]] = 'H'
-        except:
-            pass
-
-        #assigns beta-bulges
-        try:
-            if bulge_calc(count) == 1:
-                ss_dict[resnum_count_dict[count]] = 'B'
-            if ss_dict[resnum_count_dict[count-1]] == 'B':
-                ss_dict[resnum_count_dict[count]] = 'b'
-            if ss_dict[resnum_count_dict[count]] == 'B' and sheet_test(count-1) == 1 and ss_dict[resnum_count_dict[count - 1]] == '-':
-                ss_dict[resnum_count_dict[count-1]] = 'e'
-            if ss_dict[resnum_count_dict[count]] == 'b' and sheet_test(count+1) == 1 and ss_dict[resnum_count_dict[count + 1]] == '-':
-                ss_dict[resnum_count_dict[count+1]] = 'e'
-
-        except:
-            pass
-
-        try:
-            if helix1_long_calc(count) == 1:
-                ss_dict[resnum_count_dict[count]] = 'P'
-        except:
-            pass
-        
-
-        ### PhiPsi2 motif assignment    
-        ### t turns ### Way way loose, even calls helixes turns
-        try:
-            if (discaca3_dict[resnum_count_dict[count]] < 6.5 and pp_dict[resnum_count_dict[count]] == '-'):
-                pp_dict[resnum_count_dict[count]] = 't'
-        except:
-            pass
-        try:
-            if (discaca3_dict[resnum_count_dict[count-3]] < 6.5 and pp_dict[resnum_count_dict[count]] == '-'):
-                pp_dict[resnum_count_dict[count]] = 't'
-        except:
-            pass
-
-        ### PhiPsi2 motif assignment    
-        ### This one needs to go first because it's somewhat relaxed compared to the others, and if not first, some turns and bulges will be masked
-        try:
-            if pp_sheet_calc(count) == 1:
-                pp_dict[resnum_count_dict[count]] = 'E'
-                try:
-                    pp_dict[resnum_count_dict[count+1]] = 'E'
-                except:
-                    pass
-                #try:
-                #    pp_dict[resnum_count_dict[count-1]] = 'E'
-                #except:
-                #    pass
-                #try:
-                #    pp_dict[resnum_count_dict[count+2]] = 'E'
-                #except:
-                #    pass
-            elif pp_sheet_calc(count) == 2:
-                pp_dict[resnum_count_dict[count]] = 'E'
-                try:
-                    pp_dict[resnum_count_dict[count+1]] = 'E'
-                except:
-                    pass
-                #try:
-                #    pp_dict[resnum_count_dict[count+2]] = 'E'
-                #except:
-                #    pass
-            elif pp_sheet_calc(count) == 3:
-                pp_dict[resnum_count_dict[count]] = 'E'
-                try:
-                    pp_dict[resnum_count_dict[count+1]] = 'E'
-                except:
-                    pass
-                #try:
-                #    pp_dict[resnum_count_dict[count-1]] = 'E'
-                #except:
-                #    pass
-            elif pp_sheet_calc(count) == 4:
-                pp_dict[resnum_count_dict[count]] = 'E'
-                try:
-                    pp_dict[resnum_count_dict[count+1]] = 'E'
-                except:
-                    pass
-            elif pp_sheet_calc(count) == 5:
-                #try:
-                #    pp_dict[resnum_count_dict[count+2]] = 'E'
-                #except:
-                #    pass
-                try:
-                    pp_dict[resnum_count_dict[count+1]] = 'E'
-                except:
-                    pass
-        except:
-            pass
-
-       
-        ### PhiPsi2 motif assignment    
-        try:
-            if pp_helixa_calc(count) == 4:
-                pp_dict[resnum_count_dict[count]] = 'H'
-                try:
-                    pp_dict[resnum_count_dict[count+1]] = 'H'
-                except:
-                    pass
-                #try:
-                #    pp_dict[resnum_count_dict[count-1]] = 'H'
-                #except:
-                #    pass
-                #try:
-                #    pp_dict[resnum_count_dict[count+2]] = 'H'
-                #except:
-                #    pass
-            elif pp_helixa_calc(count) == 1:
-                try:
-                    pp_dict[resnum_count_dict[count+1]] = 'H'
-                except:
-                    pass
-                #try:
-                #    pp_dict[resnum_count_dict[count+2]] = 'H'
-                #except:
-                #    pass
-        except:
-            pass
+        pdb.close()
 
 
 
-        ### PhiPsi2 motif assignment    
-            ### for turns
-        try:
-            if pp_turn_calc(count) == 1:
-                pp_dict[resnum_count_dict[count+1]] = 'T'
-            elif pp_turn_calc(count) == 2:
-                pp_dict[resnum_count_dict[count]] = 'T'
-                try:
-                    pp_dict[resnum_count_dict[count+1]] = 'T'
-                except:
-                    pass
-            elif pp_turn_calc(count) == 3:
-                pp_dict[resnum_count_dict[count]] = 'N'
-                try:
-                    pp_dict[resnum_count_dict[count+1]] = 'N'
-                except:
-                    pass
-            elif pp_turn_calc(count) == 4:
-                pp_dict[resnum_count_dict[count]] = 'T'
-                try:
-                    pp_dict[resnum_count_dict[count+1]] = 'T'
-                except:
-                    pass
-                #try:
-                #    pp_dict[resnum_count_dict[count-1]] = 'H'
-                #except:
-                #    pass
-            elif pp_turn_calc(count) == 5:
-                pp_dict[resnum_count_dict[count]] = 'T'
-                try:
-                    pp_dict[resnum_count_dict[count+1]] = 'T'
-                except:
-                    pass
-                #try:
-                #    pp_dict[resnum_count_dict[count-1]] = 'E'
-                #except:
-                #    pass
-                #try:
-                #    pp_dict[resnum_count_dict[count+2]] = 'E'
-                #except:
-                #    pass
-            elif pp_turn_calc(count) == 6:
-                pp_dict[resnum_count_dict[count]] = 'T'
-                try:
-                    pp_dict[resnum_count_dict[count-1]] = 'T'
-                except:
-                    pass
-            elif pp_turn_calc(count) == 7:
-                pp_dict[resnum_count_dict[count]] = 'E'
-                try:
-                    pp_dict[resnum_count_dict[count+1]] = 'T'
-                except:
-                    pass
-                #try:
-                #    pp_dict[resnum_count_dict[count-1]] = 'E'
-                #except:
-                #    pass
-                #try:
-                #    pp_dict[resnum_count_dict[count+2]] = 'T'
-                #except:
-                #    pass
-        except:
-            pass
-        ### PhiPsi2 motif assignment    
-            ### for bulges
-        try:
-            if pp_bulge_calc(count) == 1:
-                pp_dict[resnum_count_dict[count]] = 'B'
-                try:
-                    pp_dict[resnum_count_dict[count+1]] = 'b'
-                except:
-                    pass
-                #try:
-                #    pp_dict[resnum_count_dict[count-1]] = 'E'
-                #except:
-                #    pass
-            elif pp_bulge_calc(count) == 2:
-                pp_dict[resnum_count_dict[count]] = 'B'
-                try:
-                    pp_dict[resnum_count_dict[count+1]] = 'b'
-                except:
-                    pass
-                #try:
-                #    pp_dict[resnum_count_dict[count+2]] = 'E'
-                #except:
-                #    pass
-            elif pp_bulge_calc(count) == 3:
-                pp_dict[resnum_count_dict[count]] = 'B'
-                try:
-                    pp_dict[resnum_count_dict[count+1]] = 'b'
-                except:
-                    pass
-                #try:
-                #    pp_dict[resnum_count_dict[count+2]] = 'E'
-                #except:
-                #    pass
-                #try:
-                #    pp_dict[resnum_count_dict[count-1]] = 'E'
-                #except:
-                #    pass
-            elif pp_bulge_calc(count) == 4:
-                pp_dict[resnum_count_dict[count]] = 'B'
-                try:
-                    pp_dict[resnum_count_dict[count+1]] = 'b'
-                except:
-                    pass
-                #try:
-                #    pp_dict[resnum_count_dict[count-1]] = 'T'
-                #except:
-                #    pass
-                #try:
-                #    pp_dict[resnum_count_dict[count+2]] = 'E'
-                #except:
-                #    pass
-        except:
-            pass
-        ### PhiPsi2 motif assignment    
-            ### for pi-helicies
-        try:
-            if pp_pi_calc(count) == 1:
-                pp_dict[resnum_count_dict[count]] = 'U'
-                try:
-                    pp_dict[resnum_count_dict[count+1]] = 'U'
-                except:
-                    pass
-                #try:
-                #    pp_dict[resnum_count_dict[count-1]] = 'H'
-                #except:
-                #    pass
-        except:
-            pass      
-        ### PhiPsi2 motif assignment    
-            ### for the Stig
-        try:
-            if pp_stig_calc(count) == 1:
-                pp_dict[resnum_count_dict[count]] = 'X'
-                try:
-                    pp_dict[resnum_count_dict[count+1]] = 'X'
-                except:
-                    pass
-        except:
-            pass   
-        #extends helicies
-        try:
-            if ss_dict[resnum_count_dict[count-1]] == 'G' and ss_dict[resnum_count_dict[count]] != 'G':
-                ss_dict[resnum_count_dict[count]] = 'g'
-            elif ss_dict[resnum_count_dict[count-1]] == 'H' and ss_dict[resnum_count_dict[count]] != 'H':
-                ss_dict[resnum_count_dict[count]] = 'h'
-        except:
-            pass
-
-        #extends beta-sheets based on nearby beta-sheets and passing sheet_test, and not being assigned another type of SS
-        try:
-            if ss_dict[resnum_count_dict[count]] == 'E' and ss_dict[resnum_count_dict[count-1]] == '-' and ss_dict[resnum_count_dict[count+1]] == '-':
-                ss_dict[resnum_count_dict[count-1]] = 'e'
-                ss_dict[resnum_count_dict[count+1]] = 'e'
-            elif ss_dict[resnum_count_dict[count+1]] == 'E' and ss_dict[resnum_count_dict[count+2]] == 'E' and ss_dict[resnum_count_dict[count+3]] == 'E' and sheet_test(count) == 1:
-                ss_dict[resnum_count_dict[count]] = 'e'
-            elif ss_dict[resnum_count_dict[count-1]] == 'E' and ss_dict[resnum_count_dict[count-2]] == 'E' and ss_dict[resnum_count_dict[count-3]] == 'E' and sheet_test(count) == 1 and ss_dict[resnum_count_dict[count]] == '-':
-                ss_dict[resnum_count_dict[count]] = 'e'
-            elif ss_dict[resnum_count_dict[count+2]] == 'E' and ss_dict[resnum_count_dict[count+3]] == 'E' and ss_dict[resnum_count_dict[count+4]] == 'E' and sheet_test(count) == 1 and ss_dict[resnum_count_dict[count]] == '-':
-                ss_dict[resnum_count_dict[count]] = 'e'
-            elif ss_dict[resnum_count_dict[count-2]] == 'E' and ss_dict[resnum_count_dict[count-3]] == 'E' and ss_dict[resnum_count_dict[count-4]] == 'E' and sheet_test(count) == 1 and ss_dict[resnum_count_dict[count]] == '-':
-                ss_dict[resnum_count_dict[count]] = 'e'
-        except:
-            pass
-
-
-    # logic for assigning the final secondary structures
-    #for resnum in resnum_list:
-        try:
-            final_dict[resnum_count_dict[count]] = pp_dict[resnum_count_dict[count]]
-        except:
-            pass
-        try:
-            if(final_dict[resnum_count_dict[count]] == '-'):
-                final_dict[resnum_count_dict[count]] = ss_dict[resnum_count_dict[count]]
-        except:
-            pass
-        try:
-            if((final_dict[resnum_count_dict[count]] == 't') and (ss_dict[resnum_count_dict[count]] != 'h')and (ss_dict[resnum_count_dict[count]] != 'E')and (ss_dict[resnum_count_dict[count]] != 'e')and (ss_dict[resnum_count_dict[count]] != '-')):
-                final_dict[resnum_count_dict[count]] = ss_dict[resnum_count_dict[count]]
-        except:
-            pass
-        try:
-            if((pp_dict[resnum_count_dict[count]] == 'E') and ((ss_dict[resnum_count_dict[count]] == 'T') or (ss_dict[resnum_count_dict[count]] == 'N'))):
-                final_dict[resnum_count_dict[count]] = ss_dict[resnum_count_dict[count]]
-        except:
-            pass
-        try:
-            if(((pp_dict[resnum_count_dict[count]] == 'E') or (pp_dict[resnum_count_dict[count]] == 'b'))and ((ss_dict[resnum_count_dict[count]] == 'B') or (ss_dict[resnum_count_dict[count]] == 'b'))):
-                final_dict[resnum_count_dict[count]] = ss_dict[resnum_count_dict[count]]
-        except:
-            pass
-        try:
-            if(((pp_dict[resnum_count_dict[count]] == 'H') and ((ss_dict[resnum_count_dict[count]] == 'G')))):
-                final_dict[resnum_count_dict[count]] = ss_dict[resnum_count_dict[count]]
-        except:
-            pass
-        try:
-            if( (ss_dict[resnum_count_dict[count]] == 'P') and (pp_dict[resnum_count_dict[count]] != 'T') and (pp_dict[resnum_count_dict[count]] != 'N')):
-                final_dict[resnum_count_dict[count]] = ss_dict[resnum_count_dict[count]]
-        except:
-            pass
-
-
-                    ### UNASSIGNED CIS PEPTIDES ASSIGNED HERE
-    #for count in resnum_count:
-
-        try:
-            if((cis_calc(count) == 1) and final_dict[resnum_count_dict[count]] == '-'):
-                final_dict[resnum_count_dict[count]] = '='
-        except:
-            pass
-
-
-    ############# DONE ASSIGNING #############
-
-    # only prints if there is no output file specified
-    if args.output == None:
-        
-        # Dmitriy helped out a lot here, though the code has been heavily modified by this point
-        def chunks(l,n):
-            for i in range(0,len(l),n):
-                yield l[i:i+n]
-
-        
-        # We only use the first value in this dictionary. We need it though still
-        # It's frustrating but way way too late to change
-        
-        # all this if and elifs and such are just to get human readable output
-        print("Chain:", chain_id_dict[resnum_list[0]])
-        
-        for chunk in chunks(resnum_count,40):
-        
-            j = 0
-            for count in chunk:
-                j += 1
-                
-                if j == 1:
-                    sys.stdout.write("Final Struc:\t")
-                try:
-                    if gap_check(resnum_count_dict[count]) == 'behind' or gap_check(resnum_count_dict[count]) == 'isolated':
-                        sys.stdout.write("_")
-                except:
-                    pass
-                if j == 1:
-                    sys.stdout.write(final_dict[resnum_count_dict[count]])
+        #this makes the resnum_list unique, and deals correctly with insertion codes
+        #ie. it gets unique values, sorts them numerically, which works because codes (A, B, C, etc) get converted to ascii values ie. 101A becomes 101.52
+        # then after sorting it undoes this ascii conversion and regenerates the string
+        res_set = set(resnum_list_unsort)
+        resnum_list_float = list(res_set)
+        resnum_list = []
+        for resnum in resnum_list_float:
+            num = re.sub(r"([0-9]+)(\.)([0-9]+)", r"\1", str(resnum))
+            ascii = re.sub(r"([0-9]+)(\.)([0-9]+)", r"\3", str(resnum))
+            if int(ascii) < 0:
+                ascii = int(ascii) * -1
+            insert = chr(int(ascii))
+            resnum_list.append(str(num)+str(insert))
                     
-                elif j < len(chunk) and (j % 10) != 0:
-                    sys.stdout.write(final_dict[resnum_count_dict[count]])
-                    
-                elif j < len(chunk) and (j % 10) == 0:
-                    sys.stdout.write(final_dict[resnum_count_dict[count]] + '\t')
-                elif j == len(chunk):
-                    print(final_dict[resnum_count_dict[count]])
-                
-
-
-            if args.verbose == True:
-                j = 0
-                for count in chunk:
-                    j += 1
-                    
-                    if j == 1:
-                        sys.stdout.write("PhiPsi2 Struc:\t")
-                    try:
-                        if gap_check(resnum_count_dict[count]) == 'behind' or gap_check(resnum_count_dict[count]) == 'isolated':
-                            sys.stdout.write("_")
-                    except:
-                        pass
-                    if j == 1:
-                        sys.stdout.write(pp_dict[resnum_count_dict[count]])
-                        
-                    elif j < len(chunk) and (j % 10) != 0:
-                        sys.stdout.write(pp_dict[resnum_count_dict[count]])
-                        
-                    elif j < len(chunk) and (j % 10) == 0:
-                        sys.stdout.write(pp_dict[resnum_count_dict[count]] + '\t')
-                    elif j == len(chunk):
-                        print(pp_dict[resnum_count_dict[count]])
-
-                
-                j = 0
-                for count in chunk:
-                    j += 1
-                    
-                    if j == 1:
-                        sys.stdout.write("Sec. Structure\t")
-                    try:
-                        if gap_check(resnum_count_dict[count]) == 'behind' or gap_check(resnum_count_dict[count]) == 'isolated':
-                            sys.stdout.write("_")
-                    except:
-                        pass
-                        
-                    if j == 1:
-                        sys.stdout.write(ss_dict[resnum_count_dict[count]])
-                        
-                    elif j < len(chunk) and (j % 10) != 0:
-                        sys.stdout.write(ss_dict[resnum_count_dict[count]])
-                        
-                    elif j < len(chunk) and (j % 10) == 0:
-                        sys.stdout.write(ss_dict[resnum_count_dict[count]] + '\t')
-                    elif j == len(chunk):
-                        print(ss_dict[resnum_count_dict[count]])
-
-
-
-            j = 0
-            for count in chunk:
-                j += 1
-                
-                if j == 1:
-                    sys.stdout.write("Residue Type\t")
-                try:
-                    if gap_check(resnum_count_dict[count]) == 'behind' or gap_check(resnum_count_dict[count]) == 'isolated':
-                        sys.stdout.write("_")
-                except:
-                    pass
-                if j == 1:
-                    sys.stdout.write(aa_dict[resnum_count_dict[count]])
-                elif j < len(chunk) and (j % 10) != 0:
-                    sys.stdout.write(aa_dict[resnum_count_dict[count]])
-                elif j < len(chunk) and (j % 10) == 0:
-                    sys.stdout.write(aa_dict[resnum_count_dict[count]] + '\t')
-                elif j == len(chunk):
-                    print(aa_dict[resnum_count_dict[count]])
-
-            j = 0
-            for count in chunk:
-                j += 1
-                
-                if j == 1:
-                    sys.stdout.write("Residue Number\t")
-                if j == 1:
-                    sys.stdout.write(resnum_count_dict[count] + '\t\t')
-                elif j < len(chunk) and ((j - 1) % 10) == 0:
-                    sys.stdout.write(resnum_count_dict[count] + '\t\t')
-                elif j == len(chunk):
-                    print('\n')
-                
-    # presumably there is an output file specified, so this makes a temporary output for each chain
-    else:
-        
-        temp = open(args.output+".temp.safe_to_delete"+".chain"+chain_id_dict[resnum_list[0]], "w")
-
+        # this is necessicary so that we can call the next or previous residue by using count +1 or count -1, but we need to pass the actual resnum in resnum_list to the calculators
+        resnum_count = range(1,len(resnum_list) + 1)
+        count = 1
+        resnum_count_dict = {}
         for resnum in resnum_list:
-            if args.verbose == True:
-                try:
-                    temp.write(str(resnum)+"\t"+str(aa_dict[resnum])+"\t"+str(chain_id_dict[resnum])+"\t"+str(phi_dict[resnum])+"\t"+str(psi_dict[resnum])+"\t"+str(ss_dict[resnum])+"\t"+str(pp_dict[resnum])+"\t"+str(final_dict[resnum])+"\n")
-                except:
-                    pass    
-            else:
-                try:
-                    temp.write(str(resnum)+"\t"+str(aa_dict[resnum])+"\t"+str(chain_id_dict[resnum])+"\t"+str(final_dict[resnum])+"\n")
-                except:
-                    pass     
-        temp.close()
+            resnum_count_dict[count] = resnum
+            count = count + 1
+
+        ###############################################################################################
+        ######### Below this line is all the looping and such that calls the calulators then ##########
+        ######### assigns secondary structure. ########################################################
+        ###############################################################################################
+
+        ### loop that makes a dictionary of residue numbers and their zeta values
+
+        zeta_dict = {}
+        tau_dict = {}
+        dison3_dict = {}
+        dison4_dict = {}
+        discn3_dict = {}
+        disnn1_dict = {}
+        discaca3_dict = {}
+        phi_dict = {}
+        psi_dict = {}
+        ome_dict = {}
+        
+        ## dictionary that contains all secondary structure assignments
+        ss_dict = {}
+        pp_dict = {}
+        final_dict = {}
+
+        ##dictionary for residue types based on residue number
+        res_type_dict = {}
+        chain_id_dict = {}
+        aa_dict = {}
+        
+        for count in resnum_count:
+            
+            #using try means that we will not be thrown off by gaps
+            try:
+                phi_dict[resnum_count_dict[count]] = phi_calc(resnum_count_dict[count])
+            except:
+                pass            #print "Phi not calculated for residue number %i\n" % resnum_count_dict[count]
+            
+            try:
+                psi_dict[resnum_count_dict[count]] = psi_calc(resnum_count_dict[count])
+            except:
+                pass            #print "psi not calculated for residue number %i\n" % resnum_count_dict[count]
+
+            try:
+                zeta_dict[resnum_count_dict[count]] = zeta_calc(resnum_count_dict[count])
+            except:
+                pass            #print "Zeta not calculated for residue number %i\n" % resnum_count_dict[count]
+            try:
+                tau_dict[resnum_count_dict[count]] = tau_calc(resnum_count_dict[count])
+            except:
+                pass            #print "Tau not calculated for residue number %i\n" % resnum_count_dict[count]
+            
+            try:
+                dison3_dict[resnum_count_dict[count]] = dison3_calc(resnum_count_dict[count])
+            except:
+                pass            #print "Dison3 not calculated for residue number %i\n" % resnum_count_dict[count]
+            
+            try:
+                dison4_dict[resnum_count_dict[count]] = dison4_calc(resnum_count_dict[count])
+            except:
+                pass            #print "Dison4 not calculated for residue number %i\n" % resnum_count_dict[count]
+            
+            try:
+                discn3_dict[resnum_count_dict[count]] = discn3_calc(resnum_count_dict[count])
+            except:
+                pass            #print "Discn3 not calculated for residue number %i\n" % resnum_count_dict[count]
+            
+            try:
+                disnn1_dict[resnum_count_dict[count]] = disnn1_calc(resnum_count_dict[count])
+            except:
+                pass
+
+                    
+            try:
+                discaca3_dict[resnum_count_dict[count]] = discaca3_calc(resnum_count_dict[count])
+            except:
+                pass
+            
+            try:
+                ome_dict[resnum_count_dict[count]] = ome_calc(resnum_count_dict[count])
+            except:
+                pass
 
 
-    #endTime = time.time()
-    #workTime = endTime - startTime
-    #print ("\nChain completed in: " + str(workTime) + " seconds.\n")
+            indices = index_getter(resnum_count_dict[count])    
+            atom_types = 'CA'
+            
+            for i in indices:
+                if atom_getter(i,'CA') == 'no':
+                    pass
+                else:
+                    res_type_dict[resnum_count_dict[count]] = atom_get(i,'CA')
+                    chain_id_dict[resnum_count_dict[count]] = chain_get(i,'CA')
+            try:
+                aa_dict[resnum_count_dict[count]] = to_single(one_letter,res_type_dict[resnum_count_dict[count]])
+            except:
+                aa_dict[resnum_count_dict[count]] = '?'
+        
+            ### setting all the SS to blank
+            ss_dict[resnum_count_dict[count]] = '-'
+            pp_dict[resnum_count_dict[count]] = '-'           
+
+        ###############################################################################################
+        ######### Above this line is all the looping and such that calls the calulators ###############
+        ################## Below is the acutal assignment #############################################
+        ###############################################################################################
+
+
+        # assigns SS to all residues
+        # ensures that there is a minimum of 4 residues in a row for a helix
+        #PRIORITY: B, P(4+), H, G, T, E, N, P(2-3)
+        #for count in resnum_count:
+            try:
+                if helix1_short_calc(count) == 1:
+                    ss_dict[resnum_count_dict[count]] = 'P'
+            except:
+                pass
+
+            try:
+                if betan_test(count) == 1:
+                    ss_dict[resnum_count_dict[count]] = 'N'
+            except:
+                pass
+                    
+            try:
+                if sheet_calc(count) == 1:
+                    ss_dict[resnum_count_dict[count]] = 'E'
+            except:
+                pass
+
+            try:
+                if betat_test(count) == 1:
+                    ss_dict[resnum_count_dict[count]] = 'T'
+            except:
+                pass
+                
+                
+            try:
+                if helix10_calc(count) == 1:
+                    ss_dict[resnum_count_dict[count]] = 'G'
+            except:
+                pass
+
+            try:
+                if helixa_calc(count) == 1:
+                    ss_dict[resnum_count_dict[count]] = 'H'
+            except:
+                pass
+
+            #assigns beta-bulges
+            try:
+                if bulge_calc(count) == 1:
+                    ss_dict[resnum_count_dict[count]] = 'B'
+                if ss_dict[resnum_count_dict[count-1]] == 'B':
+                    ss_dict[resnum_count_dict[count]] = 'b'
+                if ss_dict[resnum_count_dict[count]] == 'B' and sheet_test(count-1) == 1 and ss_dict[resnum_count_dict[count - 1]] == '-':
+                    ss_dict[resnum_count_dict[count-1]] = 'e'
+                if ss_dict[resnum_count_dict[count]] == 'b' and sheet_test(count+1) == 1 and ss_dict[resnum_count_dict[count + 1]] == '-':
+                    ss_dict[resnum_count_dict[count+1]] = 'e'
+
+            except:
+                pass
+
+            try:
+                if helix1_long_calc(count) == 1:
+                    ss_dict[resnum_count_dict[count]] = 'P'
+            except:
+                pass
+            
+
+            ### PhiPsi2 motif assignment    
+            ### t turns ### Way way loose, even calls helixes turns
+            try:
+                if (discaca3_dict[resnum_count_dict[count]] < 6.5 and pp_dict[resnum_count_dict[count]] == '-'):
+                    pp_dict[resnum_count_dict[count]] = 't'
+            except:
+                pass
+            try:
+                if (discaca3_dict[resnum_count_dict[count-3]] < 6.5 and pp_dict[resnum_count_dict[count]] == '-'):
+                    pp_dict[resnum_count_dict[count]] = 't'
+            except:
+                pass
+
+            ### PhiPsi2 motif assignment    
+            ### This one needs to go first because it's somewhat relaxed compared to the others, and if not first, some turns and bulges will be masked
+            try:
+                if pp_sheet_calc(count) == 1:
+                    pp_dict[resnum_count_dict[count]] = 'E'
+                    try:
+                        pp_dict[resnum_count_dict[count+1]] = 'E'
+                    except:
+                        pass
+                    #try:
+                    #    pp_dict[resnum_count_dict[count-1]] = 'E'
+                    #except:
+                    #    pass
+                    #try:
+                    #    pp_dict[resnum_count_dict[count+2]] = 'E'
+                    #except:
+                    #    pass
+                elif pp_sheet_calc(count) == 2:
+                    pp_dict[resnum_count_dict[count]] = 'E'
+                    try:
+                        pp_dict[resnum_count_dict[count+1]] = 'E'
+                    except:
+                        pass
+                    #try:
+                    #    pp_dict[resnum_count_dict[count+2]] = 'E'
+                    #except:
+                    #    pass
+                elif pp_sheet_calc(count) == 3:
+                    pp_dict[resnum_count_dict[count]] = 'E'
+                    try:
+                        pp_dict[resnum_count_dict[count+1]] = 'E'
+                    except:
+                        pass
+                    #try:
+                    #    pp_dict[resnum_count_dict[count-1]] = 'E'
+                    #except:
+                    #    pass
+                elif pp_sheet_calc(count) == 4:
+                    pp_dict[resnum_count_dict[count]] = 'E'
+                    try:
+                        pp_dict[resnum_count_dict[count+1]] = 'E'
+                    except:
+                        pass
+                elif pp_sheet_calc(count) == 5:
+                    #try:
+                    #    pp_dict[resnum_count_dict[count+2]] = 'E'
+                    #except:
+                    #    pass
+                    try:
+                        pp_dict[resnum_count_dict[count+1]] = 'E'
+                    except:
+                        pass
+            except:
+                pass
+
+           
+            ### PhiPsi2 motif assignment    
+            try:
+                if pp_helixa_calc(count) == 4:
+                    pp_dict[resnum_count_dict[count]] = 'H'
+                    try:
+                        pp_dict[resnum_count_dict[count+1]] = 'H'
+                    except:
+                        pass
+                    #try:
+                    #    pp_dict[resnum_count_dict[count-1]] = 'H'
+                    #except:
+                    #    pass
+                    #try:
+                    #    pp_dict[resnum_count_dict[count+2]] = 'H'
+                    #except:
+                    #    pass
+                elif pp_helixa_calc(count) == 1:
+                    try:
+                        pp_dict[resnum_count_dict[count+1]] = 'H'
+                    except:
+                        pass
+                    #try:
+                    #    pp_dict[resnum_count_dict[count+2]] = 'H'
+                    #except:
+                    #    pass
+            except:
+                pass
+
+
+
+            ### PhiPsi2 motif assignment    
+                ### for turns
+            try:
+                if pp_turn_calc(count) == 1:
+                    pp_dict[resnum_count_dict[count+1]] = 'T'
+                elif pp_turn_calc(count) == 2:
+                    pp_dict[resnum_count_dict[count]] = 'T'
+                    try:
+                        pp_dict[resnum_count_dict[count+1]] = 'T'
+                    except:
+                        pass
+                elif pp_turn_calc(count) == 3:
+                    pp_dict[resnum_count_dict[count]] = 'N'
+                    try:
+                        pp_dict[resnum_count_dict[count+1]] = 'N'
+                    except:
+                        pass
+                elif pp_turn_calc(count) == 4:
+                    pp_dict[resnum_count_dict[count]] = 'T'
+                    try:
+                        pp_dict[resnum_count_dict[count+1]] = 'T'
+                    except:
+                        pass
+                    #try:
+                    #    pp_dict[resnum_count_dict[count-1]] = 'H'
+                    #except:
+                    #    pass
+                elif pp_turn_calc(count) == 5:
+                    pp_dict[resnum_count_dict[count]] = 'T'
+                    try:
+                        pp_dict[resnum_count_dict[count+1]] = 'T'
+                    except:
+                        pass
+                    #try:
+                    #    pp_dict[resnum_count_dict[count-1]] = 'E'
+                    #except:
+                    #    pass
+                    #try:
+                    #    pp_dict[resnum_count_dict[count+2]] = 'E'
+                    #except:
+                    #    pass
+                elif pp_turn_calc(count) == 6:
+                    pp_dict[resnum_count_dict[count]] = 'T'
+                    try:
+                        pp_dict[resnum_count_dict[count-1]] = 'T'
+                    except:
+                        pass
+                elif pp_turn_calc(count) == 7:
+                    pp_dict[resnum_count_dict[count]] = 'E'
+                    try:
+                        pp_dict[resnum_count_dict[count+1]] = 'T'
+                    except:
+                        pass
+                    #try:
+                    #    pp_dict[resnum_count_dict[count-1]] = 'E'
+                    #except:
+                    #    pass
+                    #try:
+                    #    pp_dict[resnum_count_dict[count+2]] = 'T'
+                    #except:
+                    #    pass
+            except:
+                pass
+            ### PhiPsi2 motif assignment    
+                ### for bulges
+            try:
+                if pp_bulge_calc(count) == 1:
+                    pp_dict[resnum_count_dict[count]] = 'B'
+                    try:
+                        pp_dict[resnum_count_dict[count+1]] = 'b'
+                    except:
+                        pass
+                    #try:
+                    #    pp_dict[resnum_count_dict[count-1]] = 'E'
+                    #except:
+                    #    pass
+                elif pp_bulge_calc(count) == 2:
+                    pp_dict[resnum_count_dict[count]] = 'B'
+                    try:
+                        pp_dict[resnum_count_dict[count+1]] = 'b'
+                    except:
+                        pass
+                    #try:
+                    #    pp_dict[resnum_count_dict[count+2]] = 'E'
+                    #except:
+                    #    pass
+                elif pp_bulge_calc(count) == 3:
+                    pp_dict[resnum_count_dict[count]] = 'B'
+                    try:
+                        pp_dict[resnum_count_dict[count+1]] = 'b'
+                    except:
+                        pass
+                    #try:
+                    #    pp_dict[resnum_count_dict[count+2]] = 'E'
+                    #except:
+                    #    pass
+                    #try:
+                    #    pp_dict[resnum_count_dict[count-1]] = 'E'
+                    #except:
+                    #    pass
+                elif pp_bulge_calc(count) == 4:
+                    pp_dict[resnum_count_dict[count]] = 'B'
+                    try:
+                        pp_dict[resnum_count_dict[count+1]] = 'b'
+                    except:
+                        pass
+                    #try:
+                    #    pp_dict[resnum_count_dict[count-1]] = 'T'
+                    #except:
+                    #    pass
+                    #try:
+                    #    pp_dict[resnum_count_dict[count+2]] = 'E'
+                    #except:
+                    #    pass
+            except:
+                pass
+            ### PhiPsi2 motif assignment    
+                ### for pi-helicies
+            try:
+                if pp_pi_calc(count) == 1:
+                    pp_dict[resnum_count_dict[count]] = 'U'
+                    try:
+                        pp_dict[resnum_count_dict[count+1]] = 'U'
+                    except:
+                        pass
+                    #try:
+                    #    pp_dict[resnum_count_dict[count-1]] = 'H'
+                    #except:
+                    #    pass
+            except:
+                pass      
+            ### PhiPsi2 motif assignment    
+                ### for the Stig
+            try:
+                if pp_stig_calc(count) == 1:
+                    pp_dict[resnum_count_dict[count]] = 'X'
+                    try:
+                        pp_dict[resnum_count_dict[count+1]] = 'X'
+                    except:
+                        pass
+            except:
+                pass   
+            #extends helicies
+            try:
+                if ss_dict[resnum_count_dict[count-1]] == 'G' and ss_dict[resnum_count_dict[count]] != 'G':
+                    ss_dict[resnum_count_dict[count]] = 'g'
+                elif ss_dict[resnum_count_dict[count-1]] == 'H' and ss_dict[resnum_count_dict[count]] != 'H':
+                    ss_dict[resnum_count_dict[count]] = 'h'
+            except:
+                pass
+
+            #extends beta-sheets based on nearby beta-sheets and passing sheet_test, and not being assigned another type of SS
+            try:
+                if ss_dict[resnum_count_dict[count]] == 'E' and ss_dict[resnum_count_dict[count-1]] == '-' and ss_dict[resnum_count_dict[count+1]] == '-':
+                    ss_dict[resnum_count_dict[count-1]] = 'e'
+                    ss_dict[resnum_count_dict[count+1]] = 'e'
+                elif ss_dict[resnum_count_dict[count+1]] == 'E' and ss_dict[resnum_count_dict[count+2]] == 'E' and ss_dict[resnum_count_dict[count+3]] == 'E' and sheet_test(count) == 1:
+                    ss_dict[resnum_count_dict[count]] = 'e'
+                elif ss_dict[resnum_count_dict[count-1]] == 'E' and ss_dict[resnum_count_dict[count-2]] == 'E' and ss_dict[resnum_count_dict[count-3]] == 'E' and sheet_test(count) == 1 and ss_dict[resnum_count_dict[count]] == '-':
+                    ss_dict[resnum_count_dict[count]] = 'e'
+                elif ss_dict[resnum_count_dict[count+2]] == 'E' and ss_dict[resnum_count_dict[count+3]] == 'E' and ss_dict[resnum_count_dict[count+4]] == 'E' and sheet_test(count) == 1 and ss_dict[resnum_count_dict[count]] == '-':
+                    ss_dict[resnum_count_dict[count]] = 'e'
+                elif ss_dict[resnum_count_dict[count-2]] == 'E' and ss_dict[resnum_count_dict[count-3]] == 'E' and ss_dict[resnum_count_dict[count-4]] == 'E' and sheet_test(count) == 1 and ss_dict[resnum_count_dict[count]] == '-':
+                    ss_dict[resnum_count_dict[count]] = 'e'
+            except:
+                pass
+
+
+        # logic for assigning the final secondary structures
+        #for resnum in resnum_list:
+            try:
+                final_dict[resnum_count_dict[count]] = pp_dict[resnum_count_dict[count]]
+            except:
+                pass
+            try:
+                if(final_dict[resnum_count_dict[count]] == '-'):
+                    final_dict[resnum_count_dict[count]] = ss_dict[resnum_count_dict[count]]
+            except:
+                pass
+            try:
+                if((final_dict[resnum_count_dict[count]] == 't') and (ss_dict[resnum_count_dict[count]] != 'h')and (ss_dict[resnum_count_dict[count]] != 'E')and (ss_dict[resnum_count_dict[count]] != 'e')and (ss_dict[resnum_count_dict[count]] != '-')):
+                    final_dict[resnum_count_dict[count]] = ss_dict[resnum_count_dict[count]]
+            except:
+                pass
+            try:
+                if((pp_dict[resnum_count_dict[count]] == 'E') and ((ss_dict[resnum_count_dict[count]] == 'T') or (ss_dict[resnum_count_dict[count]] == 'N'))):
+                    final_dict[resnum_count_dict[count]] = ss_dict[resnum_count_dict[count]]
+            except:
+                pass
+            try:
+                if(((pp_dict[resnum_count_dict[count]] == 'E') or (pp_dict[resnum_count_dict[count]] == 'b'))and ((ss_dict[resnum_count_dict[count]] == 'B') or (ss_dict[resnum_count_dict[count]] == 'b'))):
+                    final_dict[resnum_count_dict[count]] = ss_dict[resnum_count_dict[count]]
+            except:
+                pass
+            try:
+                if(((pp_dict[resnum_count_dict[count]] == 'H') and ((ss_dict[resnum_count_dict[count]] == 'G')))):
+                    final_dict[resnum_count_dict[count]] = ss_dict[resnum_count_dict[count]]
+            except:
+                pass
+            try:
+                if( (ss_dict[resnum_count_dict[count]] == 'P') and (pp_dict[resnum_count_dict[count]] != 'T') and (pp_dict[resnum_count_dict[count]] != 'N')):
+                    final_dict[resnum_count_dict[count]] = ss_dict[resnum_count_dict[count]]
+            except:
+                pass
+
+
+                        ### UNASSIGNED CIS PEPTIDES ASSIGNED HERE
+        #for count in resnum_count:
+
+            try:
+                if((cis_calc(count) == 1) and final_dict[resnum_count_dict[count]] == '-'):
+                    final_dict[resnum_count_dict[count]] = '='
+            except:
+                pass
+
+
+        ############# DONE ASSIGNING #############
+
+        # only prints if there is no output file specified
+        if args.output == None:
+            
+            # Dmitriy helped out a lot here, though the code has been heavily modified by this point
+            def chunks(l,n):
+                for i in range(0,len(l),n):
+                    yield l[i:i+n]
+
+            
+            # We only use the first value in this dictionary. We need it though still
+            # It's frustrating but way way too late to change
+            
+            # all this if and elifs and such are just to get human readable output
+            try:
+                print("Chain:", chain_id_dict[resnum_count_dict[1]])
+            except:
+                try:
+                    print("Chain:", chain_id_dict[resnum_count_dict[25]])
+                except:
+                    print("Chain: ?")
+                    
+            for chunk in chunks(resnum_count,40):
+            
+                j = 0
+                for count in chunk:
+                    j += 1
+                    
+                    if j == 1:
+                        sys.stdout.write("Final Struc:\t")
+                    try:
+                        if gap_check(resnum_count_dict[count]) == 'behind' or gap_check(resnum_count_dict[count]) == 'isolated':
+                            sys.stdout.write("_")
+                    except:
+                        pass
+                    if j == 1:
+                        sys.stdout.write(final_dict[resnum_count_dict[count]])
+                        
+                    elif j < len(chunk) and (j % 10) != 0:
+                        sys.stdout.write(final_dict[resnum_count_dict[count]])
+                        
+                    elif j < len(chunk) and (j % 10) == 0:
+                        sys.stdout.write(final_dict[resnum_count_dict[count]] + '\t')
+                    elif j == len(chunk):
+                        print(final_dict[resnum_count_dict[count]])
+                    
+
+
+                if args.verbose == True:
+                    j = 0
+                    for count in chunk:
+                        j += 1
+                        
+                        if j == 1:
+                            sys.stdout.write("PhiPsi2 Struc:\t")
+                        try:
+                            if gap_check(resnum_count_dict[count]) == 'behind' or gap_check(resnum_count_dict[count]) == 'isolated':
+                                sys.stdout.write("_")
+                        except:
+                            pass
+                        if j == 1:
+                            sys.stdout.write(pp_dict[resnum_count_dict[count]])
+                            
+                        elif j < len(chunk) and (j % 10) != 0:
+                            sys.stdout.write(pp_dict[resnum_count_dict[count]])
+                            
+                        elif j < len(chunk) and (j % 10) == 0:
+                            sys.stdout.write(pp_dict[resnum_count_dict[count]] + '\t')
+                        elif j == len(chunk):
+                            print(pp_dict[resnum_count_dict[count]])
+
+                    
+                    j = 0
+                    for count in chunk:
+                        j += 1
+                        
+                        if j == 1:
+                            sys.stdout.write("Sec. Structure\t")
+                        try:
+                            if gap_check(resnum_count_dict[count]) == 'behind' or gap_check(resnum_count_dict[count]) == 'isolated':
+                                sys.stdout.write("_")
+                        except:
+                            pass
+                            
+                        if j == 1:
+                            sys.stdout.write(ss_dict[resnum_count_dict[count]])
+                            
+                        elif j < len(chunk) and (j % 10) != 0:
+                            sys.stdout.write(ss_dict[resnum_count_dict[count]])
+                            
+                        elif j < len(chunk) and (j % 10) == 0:
+                            sys.stdout.write(ss_dict[resnum_count_dict[count]] + '\t')
+                        elif j == len(chunk):
+                            print(ss_dict[resnum_count_dict[count]])
+
+
+
+                j = 0
+                for count in chunk:
+                    j += 1
+                    
+                    if j == 1:
+                        sys.stdout.write("Residue Type\t")
+                    try:
+                        if gap_check(resnum_count_dict[count]) == 'behind' or gap_check(resnum_count_dict[count]) == 'isolated':
+                            sys.stdout.write("_")
+                    except:
+                        pass
+                    if j == 1:
+                        sys.stdout.write(aa_dict[resnum_count_dict[count]])
+                    elif j < len(chunk) and (j % 10) != 0:
+                        sys.stdout.write(aa_dict[resnum_count_dict[count]])
+                    elif j < len(chunk) and (j % 10) == 0:
+                        sys.stdout.write(aa_dict[resnum_count_dict[count]] + '\t')
+                    elif j == len(chunk):
+                        print(aa_dict[resnum_count_dict[count]])
+
+                j = 0
+                for count in chunk:
+                    j += 1
+                    
+                    if j == 1:
+                        sys.stdout.write("Residue Number\t")
+                    if j == 1:
+                        sys.stdout.write(resnum_count_dict[count] + '\t\t')
+                    elif j < len(chunk) and ((j - 1) % 10) == 0:
+                        sys.stdout.write(resnum_count_dict[count] + '\t\t')
+                    elif j == len(chunk):
+                        print('\n')
+                    
+        # presumably there is an output file specified, so this makes a temporary output for each chain
+        else:
+            
+            temp = open(args.output+".temp.safe_to_delete"+".chain"+chain_id_dict[resnum_list[0]], "w")
+
+            for resnum in resnum_list:
+                if args.verbose == True:
+                    try:
+                        temp.write(str(resnum)+"\t"+str(aa_dict[resnum])+"\t"+str(chain_id_dict[resnum])+"\t"+str(phi_dict[resnum])+"\t"+str(psi_dict[resnum])+"\t"+str(ss_dict[resnum])+"\t"+str(pp_dict[resnum])+"\t"+str(final_dict[resnum])+"\n")
+                    except:
+                        pass    
+                else:
+                    try:
+                        temp.write(str(resnum)+"\t"+str(aa_dict[resnum])+"\t"+str(chain_id_dict[resnum])+"\t"+str(final_dict[resnum])+"\n")
+                    except:
+                        pass     
+            temp.close()
+
+
+        #endTime = time.time()
+        #workTime = endTime - startTime
+        #print ("\nChain completed in: " + str(workTime) + " seconds.\n")
 
 
 # should be obvious by now, but checking to see if the user asked for output or not
