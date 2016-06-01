@@ -99,6 +99,12 @@ def chain_get(i,atom):
         return (atom_list[i][3])
     else:
         return ('no') 
+        
+def model_get(i,atom):
+    if atom_list[i][1] == atom:
+        return (atom_list[i][4])
+    else:
+        return ('no')
 
 # function to get indicies, matches the index from resnum list with the index for the atomic coords,  which is why the resnum has to be in each
 def index_getter(resnum):
@@ -1280,7 +1286,7 @@ for model in struc:
         for residue in chain:
             for atom in residue:
                 if atom.get_name() == 'CA' or atom.get_name() == 'C' or atom.get_name() == 'N' or atom.get_name() == 'O' and residue.get_resname() != 'HOH':
-                        atom_list.append([str(residue.get_id()[1])+str(residue.get_id()[2]), atom.get_id(), residue.get_resname(), chain.get_id() ])
+                        atom_list.append([str(residue.get_id()[1])+str(residue.get_id()[2]), atom.get_id(), residue.get_resname(), chain.get_id(), model.get_id() ])
                         atom_xyz.append(atom.get_coord())
                         resnum_list_unsort.append(float(str(residue.get_id()[1])+"."+str(ord(str(residue.get_id()[2])))))    
 
@@ -1336,6 +1342,7 @@ for model in struc:
         ##dictionary for residue types based on residue number
         res_type_dict = {}
         chain_id_dict = {}
+        model_id_dict = {}
         aa_dict = {}
         
         for count in resnum_count:
@@ -1401,6 +1408,10 @@ for model in struc:
                 else:
                     res_type_dict[resnum_count_dict[count]] = atom_get(i,'CA')
                     chain_id_dict[resnum_count_dict[count]] = chain_get(i,'CA')
+                    try:
+                        model_id_dict[resnum_count_dict[count]] = model_get(i, 'CA')
+                    except:
+                        model_id_dict[resnum_count_dict[count]] = "X"
             try:
                 aa_dict[resnum_count_dict[count]] = to_single(one_letter,res_type_dict[resnum_count_dict[count]])
             except:
@@ -1419,7 +1430,7 @@ for model in struc:
         # assigns SS to all residues
         # ensures that there is a minimum of 4 residues in a row for a helix
         #PRIORITY: B, P(4+), H, G, T, E, N, P(2-3)
-        #for count in resnum_count:
+        for count in resnum_count:
             try:
                 if helix1_short_calc(count) == 1:
                     ss_dict[resnum_count_dict[count]] = 'P'
@@ -1747,6 +1758,7 @@ for model in struc:
 
         # logic for assigning the final secondary structures
         #for resnum in resnum_list:
+        for count in resnum_count:
             try:
                 final_dict[resnum_count_dict[count]] = pp_dict[resnum_count_dict[count]]
             except:
@@ -1784,7 +1796,7 @@ for model in struc:
 
 
                         ### UNASSIGNED CIS PEPTIDES ASSIGNED HERE
-        #for count in resnum_count:
+        for count in resnum_count:
 
             try:
                 if((cis_calc(count) == 1) and final_dict[resnum_count_dict[count]] == '-'):
@@ -1808,6 +1820,16 @@ for model in struc:
             # It's frustrating but way way too late to change
             
             # all this if and elifs and such are just to get human readable output
+            
+            try:
+                print("Model:", model_id_dict[resnum_count_dict[1]])
+            except:
+                try:
+                    print("Model:", model_id_dict[resnum_count_dict[25]])
+                except:
+                    print("Model: ?")
+            
+            
             try:
                 print("Chain:", chain_id_dict[resnum_count_dict[1]])
             except:
@@ -1926,18 +1948,20 @@ for model in struc:
                     
         # presumably there is an output file specified, so this makes a temporary output for each chain
         else:
+            try:
+                temp = open(args.output+".temp.safe_to_delete"+".chain"+ str(chain_id_dict[resnum_count_dict[resnum_count[0]]]) +".model" + str(model_id_dict[resnum_count_dict[resnum_count[0]]]), "w")
+            except:
+                temp = open(args.output+".temp.safe_to_delete"+".chain"+ "???" +".model" + "???", "w")
             
-            temp = open(args.output+".temp.safe_to_delete"+".chain"+chain_id_dict[resnum_list[0]], "w")
-
-            for resnum in resnum_list:
+            for count in resnum_count:
                 if args.verbose == True:
                     try:
-                        temp.write(str(resnum)+"\t"+str(aa_dict[resnum])+"\t"+str(chain_id_dict[resnum])+"\t"+str(phi_dict[resnum])+"\t"+str(psi_dict[resnum])+"\t"+str(ss_dict[resnum])+"\t"+str(pp_dict[resnum])+"\t"+str(final_dict[resnum])+"\n")
+                        temp.write(str(resnum_count_dict[count])+"\t"+str(aa_dict[resnum_count_dict[count]])+"\t"+str(chain_id_dict[resnum_count_dict[count]])+"\t"+str(model_id_dict[resnum_count_dict[count]])+"\t"+str(phi_dict[resnum_count_dict[count]])+"\t"+str(psi_dict[resnum_count_dict[count]])+"\t"+str(ss_dict[resnum_count_dict[count]])+"\t"+str(pp_dict[resnum_count_dict[count]])+"\t"+str(final_dict[resnum_count_dict[count]])+"\n")
                     except:
                         pass    
                 else:
                     try:
-                        temp.write(str(resnum)+"\t"+str(aa_dict[resnum])+"\t"+str(chain_id_dict[resnum])+"\t"+str(final_dict[resnum])+"\n")
+                        temp.write(str(resnum_count_dict[count])+"\t"+str(aa_dict[resnum_count_dict[count]])+"\t"+str(chain_id_dict[resnum_count_dict[count]])+"\t"+str(model_id_dict[resnum_count_dict[count]])+"\t"+str(final_dict[resnum_count_dict[count]])+"\n")
                     except:
                         pass     
             temp.close()
@@ -1956,9 +1980,9 @@ if args.output == None:
 else:
     output = open(args.output,'wb')
     if args.verbose == True:
-        output.write(bytes("Residue_ID"+"\t"+"Residue_Type"+"\t"+"Chain_ID"+"\t"+"Phi"+"\t"+"Psi"+"\t"+"Virtual_Secondary_Structure"+"\t"+"PhiPsi2_Motif_Structure"+"\t"+"Best_Secondary_Structure"+"\n", 'UTF-8'))
+        output.write(bytes("Residue_ID"+"\t"+"Residue_Type"+"\t"+"Chain_ID"+"\t"+"Model_ID"+"\t"+"Phi"+"\t"+"Psi"+"\t"+"Virtual_Secondary_Structure"+"\t"+"PhiPsi2_Motif_Structure"+"\t"+"Best_Secondary_Structure"+"\n", 'UTF-8'))
     else:
-        output.write(bytes("Residue_ID"+"\t"+"Residue_Type"+"\t"+"Chain_ID"+"\t"+"Secondary_Structure"+"\n", 'UTF-8'))        
+        output.write(bytes("Residue_ID"+"\t"+"Residue_Type"+"\t"+"Chain_ID"+"\t"+"Model_ID"+"\t"+"Secondary_Structure"+"\n", 'UTF-8'))        
     for filename in glob.glob('*temp.safe*'):
         shutil.copyfileobj(open(filename, 'rb'), output)
         os.remove(filename)
