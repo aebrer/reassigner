@@ -1822,21 +1822,15 @@ for model in struc:
             # all this if and elifs and such are just to get human readable output
             
             try:
-                print("Model:", model_id_dict[resnum_count_dict[1]])
+                print("Model:", model_id_dict[resnum_count_dict[resnum_count[0]]])
             except:
-                try:
-                    print("Model:", model_id_dict[resnum_count_dict[25]])
-                except:
-                    print("Model: ?")
+                print("Model: ?")
             
             
             try:
-                print("Chain:", chain_id_dict[resnum_count_dict[1]])
+                print("Chain:", chain_id_dict[resnum_count_dict[resnum_count[0]]])
             except:
-                try:
-                    print("Chain:", chain_id_dict[resnum_count_dict[25]])
-                except:
-                    print("Chain: ?")
+                print("Chain: ?")
                     
             for chunk in chunks(resnum_count,40):
             
